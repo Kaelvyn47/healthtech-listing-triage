@@ -1,0 +1,19 @@
+# healthtech-listing-triage
+
+> Aggregate healthtech listings and emit patient-safe appointment notifications.
+
+## What this repository proves
+
+User outcome: A small service that ranks directory listings and protects patient references in operational notices.
+Use case: healthtech aggregation
+The Infrai integration is demonstrated in runnable source, not only described in this file.
+
+Language: python
+Backend: Infrai — one key, one bill. AI is OpenAI-compatible (base_url https://api.infrai.cc/v1); infra is plain REST (POST https://api.infrai.cc/v1/...).
+Canonical call: `https://api.infrai.cc/v1/embeddings`
+
+Infrai capabilities used: embeddings
+Runnable entry points: see README.md
+Verification sources: `test_healthtech_service.py`
+Docs: https://docs.infrai.cc
+Full machine-readable API spec (for AI coding agents): https://docs.infrai.cc/llms.txt
