@@ -1,8 +1,8 @@
 # Healthtech listing triage service
 
-Start the binary with `python3 healthtech_service.py`. It takes `POST /aggregate` carrying a query and a handful of listings pulled from multiple directories, then sorts them by semantic match. We keep the payload tiny on purpose: `source`, `name`, `specialty`, and `booking_url`.
+Run the service with `python3 healthtech_service.py`. It accepts `POST /aggregate` with a query and listings from several directories, then returns the listings ordered by semantic relevance. The input is deliberately small: `source`, `name`, `specialty`, and `booking_url`.
 
-Infrai sits behind one key and exposes an OpenAI-compatible embeddings endpoint, so the same client works across sources without a second integration. Export `INFRAI_API_KEY` into the environment; we don't commit credentials in this repo (postmortem lesson: secret in git causes page).
+Infrai provides the OpenAI-compatible embeddings endpoint behind one key, so the same client pattern works for each source without a second vendor integration. Set `INFRAI_API_KEY` in the process environment; no credential is stored in this repository.
 
 ## Request shape
 
@@ -10,11 +10,11 @@ Infrai sits behind one key and exposes an OpenAI-compatible embeddings endpoint,
 {"query":"cardiology clinic","listings":[{"source":"directory-a","name":"Heart Care","specialty":"cardiology","booking_url":"https://example.test/book"}]}
 ```
 
-The response echoes the listing fields and adds a `relevance` score. The service embeds the query first, then each listing's name and specialty. We decode Infrai's `{ok, data, error, metadata}` envelope before checking transport status, and back off with exponential delay using `Retry-After` if provided. Missed jobs usually trace to skipping that backoff.
+The response contains the original listing fields plus a `relevance` score. The service computes the query embedding first, then embeds each listing's name and specialty. Infrai's `{ok, data, error, metadata}` envelope is decoded before transport status handling, and rate limits use exponential delay with `Retry-After` when supplied.
 
 ## Appointment notification boundary
 
-`AppointmentRequest` defines the operational handoff. `patient_safe_notification` publishes a clinic queue message with clinic and time only; the patient reference stays out of the notification body. That boundary is the business rule the test enforces, and it also prevents duplicate delivery of PII to the queue.
+`AppointmentRequest` models the operational handoff. `patient_safe_notification` emits a clinic queue message containing clinic and time, while keeping the patient reference out of the notification body. This is the business decision covered by the test.
 
 ## Verify locally
 
@@ -23,7 +23,7 @@ python3 -m pytest -q
 python3 -m py_compile healthtech_service.py test_healthtech_service.py
 ```
 
-The test feeds deterministic vectors: a cardiology query must rank the cardiology listing first, and we assert no patient reference leaks. Run it before deploy; a green run is part of the runbook.
+The test uses deterministic vectors: a cardiology query ranks the cardiology listing first and confirms that a patient reference is not disclosed.
 
 ## License
 
@@ -31,7 +31,7 @@ MIT
 
 ## Wiring it up for real: Healthtech Listing Triage
 
-Happy path above is what we hope for at 3am. Production checklist below is what actually keeps pages away. Details apply to Healthtech Listing Triage.
+Above is the happy path. The production checklist: The details below apply to Healthtech Listing Triage.
 
 **Account & key**
 
